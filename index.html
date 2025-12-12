@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Simple Modern Calculator</title>
+<style>
+  :root{
+    --bg1: #0f1724;
+    --bg2: #0b1a2b;
+    --card: rgba(255,255,255,0.04);
+    --accent: linear-gradient(135deg,#7c3aed,#06b6d4);
+    --btn-bg: rgba(255,255,255,0.03);
+    --glass: rgba(255,255,255,0.06);
+    --text: #e6eef8;
+    --muted: #9fb3d1;
+    --danger: #ff6b6b;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    background: radial-gradient(1000px 600px at 10% 10%, rgba(124,58,237,0.12), transparent 8%),
+                radial-gradient(900px 500px at 90% 90%, rgba(6,182,212,0.08), transparent 10%),
+                linear-gradient(180deg,var(--bg1),var(--bg2));
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    box-sizing:border-box;
+  }
+
+  .calc-wrap{
+    width: min(420px, 96vw);
+    border-radius:18px;
+    padding:20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    box-shadow: 0 8px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    backdrop-filter: blur(8px) saturate(120%);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .top-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .brand{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    font-weight:600;
+    letter-spacing:0.2px;
+    color:var(--text);
+  }
+  .logo{
+    width:34px;height:34px;border-radius:8px;
+    background:var(--accent);
+    box-shadow: 0 6px 18px rgba(12,15,38,0.5);
+    display:flex;align-items:center;justify-content:center;font-weight:700;
+    color:white;font-size:16px;
+  }
+  .controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .small-btn{
+    background:var(--btn-bg);
+    color:var(--muted);
+    border: none;
+    padding:6px 9px;
+    border-radius:8px;
+    font-weight:600;
+    cursor:pointer;
+    transition: transform .12s ease, background .12s;
+  }
+  .small-btn:active{ transform: translateY(1px) scale(.997); }
+
+  .display{
+    background:inear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:12px;
+    padding:18px;
+    margin-bottom:16px;
+    box-shadow: inset 0 -6px 16px rgba(2,6,23,0.6);
+    min-height:72px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:6px;
+  }
+  .history{
+    font-size:13px;
+    color:var(--muted);
+    text-overflow: ellipsis;
+    white-space:nowrap;
+    overflow:hidden;
+  }
+  .result{
+    font-size:28px;
+    font-weight:700;
+    color:var(--text);
+    word-break:break-all;
+  }
+
+  .keys{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:10px;
+  }
+
+  button.key{
+    background:var(--btn-bg);
+    border: none;
+    border-radius:10px;
+    padding:18px 0;
+    font-size:18px;
+    font-weight:700;
+    color:var(--text);
+    cursor:pointer;
+    box-shadow: 0 6px 12px rgba(2,6,23,0.5);
+    transition: transform .08s ease, filter .08s;
+  }
+  button.key:active{ transform: translateY(2px); filter:brightness(.98); }
+
+  .op{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.04);
+    color:var(--text);
+  }
+  .accent{
+    background:var(--accent);
+    color:white;
+    box-shadow: 0 8px 18px rgba(124,58,237,0.18);
+  }
+  .wide{
+    grid-column: span 2;
+  }
+  .danger{
+    background: linear-gradient(180deg, rgba(255,107,107,0.14), rgba(255,107,107,0.06));
+    color:var(--danger);
+    font-weight:800;
+  }
+
+  @media (max-width:420px){
+    .result{ font-size:24px; }
+    button.key{ padding:14px 0; font-size:16px; }
+  }
+
+  @media (hover:hover){
+    button.key:hover{ transform: translateY(-3px) scale(1.2); background-color: blue;}
+    .small-btn:hover{ transform: translateY(-2px); color: blue;}
+  }
+</style>
+</head>
+<body>
+  <main class="calc-wrap" role="application" aria-label="Calculator">
+    <div class="top-row">
+      <div class="brand">
+        <div class="logo">C</div>
+        <div>
+          <div style="font-size:14px">Calc — quick</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Basic arithmetic • keyboard ready</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="small-btn" id="copyBtn" title="Copy result">Copy</button>
+        <button class="small-btn" id="saveBtn" title="Save to local">Save</button>
+      </div>
+    </div>
+
+    <section class="display" aria-live="polite">
+      <div class="history" id="history">&nbsp;</div>
+      <div class="result" id="result">0</div>
+    </section>
+
+    <section class="keys" id="keys">
+      <button class="key danger" data-action="clear">C</button>
+      <button class="key" data-action="delete">DEL</button>
+      <button class="key" data-value="%">%</button>
+      <button class="key op" data-value="/">÷</button>
+
+      <button class="key" data-value="7">7</button>
+      <button class="key" data-value="8">8</button>
+      <button class="key" data-value="9">9</button>
+      <button class="key op" data-value="*">×</button>
+
+      <button class="key" data-value="4">4</button>
+      <button class="key" data-value="5">5</button>
+      <button class="key" data-value="6">6</button>
+      <button class="key op" data-value="-">−</button>
+
+      <button class="key" data-value="1">1</button>
+      <button class="key" data-value="2">2</button>
+      <button class="key" data-value="3">3</button>
+      <button class="key op" data-value="+">+</button>
+
+      <button class="key wide" data-value="0">0</button>
+      <button class="key" data-value=".">.</button>
+      <button class="key accent" data-action="equals">=</button>
+    </section>
+  </main>
+
+<script>
+(() => {
+  const resultEl = document.getElementById('result');
+  const historyEl = document.getElementById('history');
+  const keys = document.getElementById('keys');
+  const copyBtn = document.getElementById('copyBtn');
+  const saveBtn = document.getElementById('saveBtn');
+
+  let expr = '';
+  let lastResult = null;
+
+  function safeEval(s) {
+    s = s.replace(/(\d+(\.\d+)?)%/g, (m, p1) => `((${p1})/100)`);
+    if (/[^0-9+\-*/().% ]/.test(s)) throw new Error('Invalid characters');
+    s = s.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g,'-');
+    return Function('"use strict"; return (' + s + ')')();
+  }
+
+  function render() {
+    historyEl.textContent = expr || '\u00A0';
+    resultEl.textContent = (lastResult === null) ? (expr || '0') : String(lastResult);
+  }
+
+  function appendValue(val) {
+    const lastChar = expr.slice(-1);
+
+    if (val === '.') {
+      const lastOp = Math.max(
+        expr.lastIndexOf('+'),
+        expr.lastIndexOf('-'),
+        expr.lastIndexOf('*'),
+        expr.lastIndexOf('/'),
+        expr.lastIndexOf('('),
+        expr.lastIndexOf(')')
+      );
+      const current = expr.slice(lastOp + 1);
+      if (current.includes('.')) return;
+      if (current === '') expr += '0';
+    }
+
+    if (['+','-','*','/'].includes(val)) {
+      if (expr === '' && val !== '-') return;
+      if (['+','-','*','/'].includes(lastChar)) {
+        expr = expr.slice(0,-1) + val;
+        return;
+      }
+    }
+
+    expr += val;
+  }
+
+  function clearAll() {
+    expr = '';
+    lastResult = null;
+  }
+
+  function deleteOne() {
+    if (expr.length) expr = expr.slice(0, -1);
+    else lastResult = null;
+  }
+
+  function compute() {
+    if (!expr) return;
+    try {
+      const value = safeEval(expr);
+      if (!isFinite(value)) {
+        lastResult = 'Error';
+      } else {
+        const rounded = Math.round((value + Number.EPSILON) * 1e12) / 1e12;
+        lastResult = rounded;
+        expr = String(rounded);
+      }
+    } catch (e) {
+      lastResult = 'Error';
+    }
+  }
+
+  keys.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const v = btn.dataset.value;
+    const action = btn.dataset.action;
+
+    if (action === 'clear') {
+      clearAll();
+    } else if (action === 'delete') {
+      deleteOne();
+    } else if (action === 'equals') {
+      compute();
+    } else if (v !== undefined) {
+      appendValue(v);
+      lastResult = null;
+    }
+    render();
+  });
+
+  window.addEventListener('keydown', (e) => {
+    const key = e.key;
+    if ((/^[0-9]$/).test(key)) { appendValue(key); lastResult = null; render(); return; }
+    if (key === '.') { appendValue('.'); render(); return; }
+    if (key === 'Enter' || key === '=') { compute(); render(); return; }
+    if (key === 'Backspace') { deleteOne(); render(); return; }
+    if (key === 'Escape') { clearAll(); render(); return; }
+    if (['+','-','*','/','%'].includes(key)) { appendValue(key); lastResult = null; render(); return; }
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    try {
+      const text = (lastResult === null) ? (expr || '0') : String(lastResult);
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = 'Copied';
+      setTimeout(()=> copyBtn.textContent = 'Copy', 900);
+    } catch (err) {
+      copyBtn.textContent = 'Fail';
+      setTimeout(()=> copyBtn.textContent = 'Copy', 900);
+    }
+  });
+
+  saveBtn.addEventListener('click', () => {
+    const payload = { expr, lastResult, time: new Date().toISOString() };
+    try {
+      localStorage.setItem('calc_backup', JSON.stringify(payload));
+      saveBtn.textContent = 'Saved';
+      setTimeout(()=> saveBtn.textContent = 'Save', 900);
+    } catch (e) {
+      saveBtn.textContent = 'Err';
+      setTimeout(()=> saveBtn.textContent = 'Save', 900);
+    }
+  });
+
+  function tryRestore() {
+    try {
+      const raw = localStorage.getItem('calc_backup');
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      if (obj && typeof obj.expr === 'string') {
+        expr = obj.expr;
+        lastResult = obj.lastResult ?? null;
+      }
+    } catch (e) {}
+  }
+
+  tryRestore();
+  render();
+})();
+</script>
+</body>
+</html>
